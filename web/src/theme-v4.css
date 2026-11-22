@@ -7,3 +7,6 @@
 .interest-options button{background:#101f34;border-color:#5c708f;color:#f3f6ff}.interest-options small{color:#c3cfe3}.interest-options .selected{background:#273756;border-color:#aab8ff;color:#e6ebff}button:focus-visible,a:focus-visible{outline-color:#c4cfff}::selection{color:#081327;background:#c2ccff}
 @media(max-width:640px){.site-header{background:#0b1425f5}.site-header nav{background:#101d32;border-color:#637594}.reading-wash,.chapter-0 .reading-wash{background:linear-gradient(180deg,transparent 0%,transparent 36%,#0b1425f0 47%,#0b1425 55%)}.resume-site:not(.chapter-0) .reading-wash{background:linear-gradient(180deg,#0b1425b3,#0b1425f5 42%,#0b1425 60%)}}
 @media print{:root{color-scheme:light;color:#172b42;background:white}body,h1,h2,h1 em,h2 em,.hero-role,.intro-detail,.eyebrow,.location,.subject,.school-short,.education-note,.experience-item h3,.experience-item p,.entry-meta,.entry-meta time,.contact-details a,.contact-details a span,.interest-options button,.interest-options .selected{color:#172b42!important}.interest-options button,.interest-options .selected{background:none}.experience-item{border-color:#a9bccd}}
+/* Keep portrait controls below the face while the introduction is visible. */
+.character-controls{position:fixed}
+.resume-site:not(.chapter-0) .character-controls{visibility:hidden;pointer-events:none}
