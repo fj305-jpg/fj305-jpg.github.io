@@ -93,3 +93,40 @@ cursor-tracking claim are removed. Chapter navigation/backgrounds remain interac
 Natural continuous head/eye tracking is not delivered by this fallback; it needs a
 consistent rigged character or a consistent rendered sequence, rather than independently
 generated view images. Old direction/flow assets are retained only as archived inputs.
+
+## Offline photo sequence + minimalist Cambridge (v7 — current)
+
+The user selected a photo/video sequence instead of a rigged 3D character. The
+nine reference views are now interpolated offline with RIFE-ncnn-vulkan v4.6:
+33 yaw samples and 9 pitch samples, 297 baked RGBA frames. RGB is premultiplied
+against black before interpolation; alpha is interpolated separately and restored.
+The torso stays fixed. Production samples exactly ONE frame at a time, without
+multi-face crossfading, online optical flow, geometric image warp or video seeking.
+Damped, speed-limited pose coordinates choose the frame. A Preview turn button
+allows a complete left/right sweep; double-clicking the portrait triggers a nod.
+
+This is an image sequence, not a full 3D model. It uses finite sampled angles;
+small pose changes may still show discrete steps, and the interpolated images
+remain approximations. It is not a promise of perfect likeness or a device FPS.
+
+Desktop atlas: 5760 x 8160, ~7.1 MB encoded / ~188 MB GPU RGBA storage.
+Mobile atlas: 2880 x 4080, ~2.5 MB encoded / ~47 MB GPU storage. Devices with
+max texture size below 8192 receive the mobile atlas. The clear original frontal
+portrait stays visible while loading or if the atlas cannot be used. Reduced-motion
+preferences keep the front pose. No additional assets are fetched per cursor move.
+
+Cambridge background retains the midnight palette and single-colour architectural
+lines. The generic arches are replaced with a simplified King's College Chapel:
+twelve pointed-window bays, buttresses, crenellated parapet, four corner turrets,
+and two restrained river lines. No photographic/coloured campus backdrop is used.
+Architecture reference: https://www.kings.cam.ac.uk/sites/default/files/documents/about/cal-sos-and-visual-impact-assessment-compressed.pdf
+
+Rebuild assets with Pillow/numpy and the official extracted RIFE tool:
+`python scripts/build-portrait-sequence.py --rife /path/to/rife-ncnn-vulkan.exe`
+Official software/source: https://github.com/nihui/rife-ncnn-vulkan
+The executable/model are used locally for preparation, not shipped to the website.
+
+Validation: TypeScript, targeted ESLint, production build, intermediate-frame
+contact-sheet inspection, browser console checks. A 120-frame browser recording
+covered the complete yaw range, including all 33 positions. These checks do not
+establish universal smoothness across browsers/devices.

@@ -1,0 +1,21 @@
+{
+  "yawFrames": 33,
+  "pitchFrames": 9,
+  "atlasColumns": 15,
+  "atlasRows": 20,
+  "crop": [
+    0.1796875,
+    0.0296875,
+    0.8203125,
+    0.7109375
+  ],
+  "desktopTile": [
+    384,
+    408
+  ],
+  "mobileTile": [
+    192,
+    204
+  ],
+  "gutter": 2
+}

@@ -32,24 +32,28 @@ function ChapterSet({chapters:ids,children,focus}:{chapters:number[];children:Re
   return <group ref={root}>{children}</group>
 }
 
-function Arch({x,z,height=3.5}:{x:number;z:number;height?:number}){
-  const points=useMemo(()=>{
-    const p:[number,number,number][]=[[x-.48,-2,z],[x-.48,height-2.7,z]]
-    for(let i=0;i<=28;i++){const t=i/28;const a=Math.PI*(1-t);p.push([x+Math.cos(a)*.48,height-2.7+Math.sin(a)*.85,z])}
-    p.push([x+.48,-2,z]);return p
-  },[x,z,height])
-  return <Line points={points} color={INK} lineWidth={1}/>
-}
+/** King's Chapel: twelve Perpendicular Gothic bays and four corner turrets.
+ * Restrained architectural lines, with no photographic or coloured backdrop. */
 function Cambridge(){
-  return <group position={[1.8,-.1,-3]} rotation={[0,-.12,0]}>
-    {[-2,-.8,.4,1.6,2.8,4].map((x,i)=><group key={x}>
-      <mesh position={[x,-.3,0]}><boxGeometry args={[.13,4.7,.32]}/><meshStandardMaterial color={PALE} roughness={1}/></mesh>
-      <mesh position={[x,2.2,0]}><coneGeometry args={[.19,.65,4]}/><meshStandardMaterial color={BLUE}/></mesh>
-      <Arch x={x+.6} z={.04} height={3.9+(i%2)*.2}/>
-    </group>)}
-    <mesh position={[1,1.9,-.14]}><boxGeometry args={[7,.18,.4]}/><meshStandardMaterial color={PALE}/></mesh>
-    <mesh position={[1,-2.1,-.14]}><boxGeometry args={[8,.12,4]}/><meshStandardMaterial color={PALE}/></mesh>
-    {[0,1,2,3].map(i=><Line key={i} points={[[-2,-2.05,-i], [5,-2.05,-i]]} color={BLUE} lineWidth={.5}/>)}
+  const line='#7385ad',detail='#53688f'
+  const window=(x:number,z:number,w=.43)=>[[x-w/2,-1.55,z],[x-w/2,.48,z],[x-w*.36,.78,z],[x,.99,z],[x+w*.36,.78,z],[x+w/2,.48,z],[x+w/2,-1.55,z],[x-w/2,-1.55,z]] as [number,number,number][]
+  return <group position={[2.15,.15,-4.1]} rotation={[0,-.23,0]}>
+    <Line points={[[-3.6,-1.85,.85],[3.6,-1.85,.85],[3.6,1.5,.85],[-3.6,1.5,.85],[-3.6,-1.85,.85]]} color={line} lineWidth={1}/>
+    <Line points={[[-3.6,1.5,.85],[-3.6,2.12,0],[-3.6,1.5,-.85],[3.6,1.5,-.85],[3.6,2.12,0],[-3.6,2.12,0]]} color={detail} lineWidth={.8}/>
+    {Array.from({length:12},(_,i)=>{const x=-3.3+i*.6;return <group key={i}>
+      <Line points={window(x,.88)} color={line} lineWidth={.85}/>
+      {[-.1,0,.1].map(dx=><Line key={dx} points={[[x+dx,-1.5,.89],[x+dx,.6,.89]]} color={detail} lineWidth={.55}/>)}
+      <Line points={[[x-.2,-.15,.89],[x+.2,-.15,.89]]} color={detail} lineWidth={.6}/>
+      <Line points={[[x-.29,-1.85,1.03],[x-.29,.9,1.03],[x-.29,1.67,.87],[x-.29,1.98,.87]]} color={detail} lineWidth={.8}/>
+      <Line points={[[x-.31,1.5,.86],[x-.31,1.7,.86],[x-.19,1.7,.86],[x-.19,1.5,.86],[x+.09,1.5,.86],[x+.09,1.7,.86],[x+.21,1.7,.86],[x+.21,1.5,.86]]} color={line} lineWidth={.65}/>
+    </group>})}
+    {[-3.6,3.6].flatMap(x=>[-.85,.85].map(z=><group key={x+':'+z} position={[x,0,z]}>
+      <Line points={[[-.1,-1.85,0],[-.1,2.24,0],[-.15,2.34,0],[-.15,2.52,0],[-.07,2.52,0],[-.07,2.75,0],[0,2.93,0],[.07,2.75,0],[.07,2.52,0],[.15,2.52,0],[.15,2.34,0],[.1,2.24,0],[.1,-1.85,0]]} color={line} lineWidth={.95}/>
+      <Line points={[[0,1.68,.015],[0,2.35,.015]]} color={detail} lineWidth={.55}/>
+    </group>))}
+    <Line points={[[-3.6,-1.85,-.85],[-3.6,1.5,-.85],[-3.6,1.5,.85]]} color={line} lineWidth={.8}/>
+    <Line points={Array.from({length:50},(_,i)=>{const x=i*.24-5;return [x,-2.2+.08*Math.sin(i*.13),2.4]})} color={detail} lineWidth={.6}/>
+    <Line points={Array.from({length:50},(_,i)=>{const x=i*.24-5;return [x,-2.55+.08*Math.sin(i*.13),3.1]})} color={detail} lineWidth={.5}/>
   </group>
 }
 function Campus(){return <group position={[2.6,-.1,-3.8]} rotation={[0,-.25,0]}>
@@ -74,5 +78,6 @@ function Engineering({paused=false}:{paused?:boolean}){const ref=useRef<THREE.Gr
   <mesh rotation={[Math.PI/2,0,0]}><cylinderGeometry args={[.8,.8,2,20,4,true]}/><meshStandardMaterial color={INK} wireframe/></mesh>
   <Line points={Array.from({length:120},(_,i)=>{const x=i/15-4;return [x,Math.sin(x*4)*Math.exp(-Math.abs(x)*.4),.7]})} color="#4f8bb7" lineWidth={1.3}/>
 </group>}
+
 
 
