@@ -59,3 +59,27 @@ master identity, subtle cartoon render, facial proportions, hair, black crewneck
 blue rim light, transparent square canvas, fixed torso/framing/scale; change only
 head and gaze to each direction. Horizontal target 15 degrees, vertical 7 degrees.
 The generated images are artistic approximations, not calibrated 3D projections.
+
+## Continuous portrait interpolation (v5 — current)
+
+Supersedes v4's nine-direction selection and 85 ms dissolves. Pointer input now
+controls continuous horizontal/vertical pose coordinates with frame-rate-independent
+exponential damping. Four adjacent authored poses are aligned using bidirectional
+DIS optical flow, then interpolated on the GPU. Pose changes are interruptible and
+pass continuously through cell boundaries. The original torso remains stable.
+This remains an image-based portrait, not a fully rigged 3D head. Extreme poses
+and newly exposed features may retain small interpolation artifacts.
+
+Motion fields: four 192 x 192 RGBA half-float atlases, 1,179,648 bytes total.
+The shader uses five samplers; there is no per-frame network fetch, canvas redraw,
+React state update or new Vector3 allocation. Motion-data failure and reduced-motion
+preferences retain the frontal portrait. Initial position/scale match mobile layout.
+
+Rebuild motion fields with Python, numpy and opencv-python-headless:
+`python scripts/build-portrait-motion.py`
+Production does not require Python or OpenCV. Existing artwork is unchanged.
+Algorithm reference: https://docs.opencv.org/5.0/main_modules/classcv_1_1DISOpticalFlow.html
+
+Validation: TypeScript, targeted ESLint, production build; browser checked with
+no console errors. A 45-frame screen recording of the nod interaction showed 45
+unique face frames. This is a continuity check, not a guaranteed device FPS benchmark.
