@@ -1,76 +1,59 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 import { useJourney } from '../journey'
-
-const LIMIT=THREE.MathUtils.degToRad(15)
-const clamp=THREE.MathUtils.clamp
-/** Photo-referenced illustration on an original shallow relief; no full-turn model. */
+const names=['up-left','up','up-right','left','front','right','down-left','down','down-right']
+/** Directional artwork, without geometry distortion or eye-UV warping. */
 export default function PortraitRelief({reducedMotion}:{reducedMotion:boolean}){
-  const texture=useTexture(`${import.meta.env.BASE_URL}personal/jin-chin-portrait.png`)
-  texture.colorSpace=THREE.SRGBColorSpace
-  const mesh=useRef<THREE.Mesh>(null)
-  const {size,camera,gl}=useThree()
-  const pointer=useRef({x:0,y:0}),yaw=useRef(0),drag=useRef<number|null>(null),greet=useRef(0)
-  const projected=useMemo(()=>new THREE.Vector3(),[])
-  const geometry=useMemo(()=>{
-    const g=new THREE.PlaneGeometry(5.6,5.6,80,80),p=g.attributes.position
-    for(let i=0;i<p.count;i++){
-      const x=p.getX(i),y=p.getY(i)
-      // Soft depth across the face, torso and supporting hand, with original UVs intact.
-      const face=.3*Math.exp(-((x-.1)**2/.9+(y-1)**2/1.5))
-      const hand=.12*Math.exp(-((x-.95)**2/.5+(y-.1)**2/.8))
-      p.setZ(i,face+hand-.016*x*x)
-    }
-    g.computeVertexNormals();return g
-  },[])
-  const uniforms=useMemo(()=>({art:{value:texture},gaze:{value:new THREE.Vector2()},fade:{value:1}}),[texture])
-  useEffect(()=>{
-    const move=(e:PointerEvent)=>{pointer.current={x:e.clientX/window.innerWidth*2-1,y:1-e.clientY/window.innerHeight*2}}
-    const turn=(e:Event)=>{yaw.current=clamp(yaw.current+(e as CustomEvent<number>).detail,-LIMIT,LIMIT)}
-    const reset=()=>{yaw.current=0;pointer.current={x:0,y:0}}
-    const hello=()=>{greet.current=performance.now()+1500}
-    window.addEventListener('pointermove',move);window.addEventListener('avatar-turn',turn);window.addEventListener('portrait-reset',reset);window.addEventListener('portrait-greet',hello)
-    return ()=>{window.removeEventListener('pointermove',move);window.removeEventListener('avatar-turn',turn);window.removeEventListener('portrait-reset',reset);window.removeEventListener('portrait-greet',hello);gl.domElement.style.cursor=''}
-  },[gl])
-  useFrame(({clock},dt)=>{
-    if(!mesh.current)return
-    const active=useJourney.getState().active,mobile=size.width<641
-    const targetX=mobile?0:[2.35,2.8,2.7,3.1,3.1,2.8,2.7][active]
-    const scale=mobile?.47:active===0?1:.88
-    mesh.current.position.x=THREE.MathUtils.damp(mesh.current.position.x,targetX,3,dt)
-    mesh.current.position.y=THREE.MathUtils.damp(mesh.current.position.y,mobile?1.7:-.12,3,dt)
-    mesh.current.scale.lerp(new THREE.Vector3(scale,scale,scale),1-Math.exp(-dt*4))
-    projected.set(.25,1.04,.3).applyMatrix4(mesh.current.matrixWorld).project(camera)
-    const dx=clamp(pointer.current.x-projected.x,-1,1),dy=clamp(pointer.current.y-projected.y,-1,1)
-    const nod=performance.now()<greet.current&&!reducedMotion?Math.sin((greet.current-performance.now())*.006)*.025:0
-    mesh.current.rotation.y=THREE.MathUtils.damp(mesh.current.rotation.y,clamp(yaw.current+(reducedMotion?0:dx*.095),-LIMIT,LIMIT),6,dt)
-    mesh.current.rotation.x=THREE.MathUtils.damp(mesh.current.rotation.x,reducedMotion?0:-dy*.025+nod,6,dt)
-    mesh.current.rotation.z=reducedMotion?0:Math.sin(clock.elapsedTime*.65)*.002
-    uniforms.gaze.value.x=THREE.MathUtils.damp(uniforms.gaze.value.x,reducedMotion?0:dx*.006,9,dt)
-    uniforms.gaze.value.y=THREE.MathUtils.damp(uniforms.gaze.value.y,reducedMotion?0:dy*.003,9,dt)
-    uniforms.fade.value=THREE.MathUtils.damp(uniforms.fade.value,mobile&&active>0?.12:1,4,dt)
-  })
-  function down(e:ThreeEvent<PointerEvent>){e.stopPropagation();drag.current=e.clientX;(e.target as unknown as {setPointerCapture:(id:number)=>void}).setPointerCapture(e.pointerId);gl.domElement.style.cursor='grabbing'}
-  function up(e:ThreeEvent<PointerEvent>){drag.current=null;(e.target as unknown as {releasePointerCapture:(id:number)=>void}).releasePointerCapture(e.pointerId);gl.domElement.style.cursor='grab'}
-  return <mesh ref={mesh} geometry={geometry} position={[2.35,-.12,.3]}
-    onPointerOver={()=>{gl.domElement.style.cursor='grab'}} onPointerOut={()=>{if(drag.current===null)gl.domElement.style.cursor=''}}
-    onPointerDown={down} onPointerUp={up} onPointerCancel={up}
-    onPointerMove={e=>{if(drag.current!==null){yaw.current=clamp(yaw.current+(e.clientX-drag.current)*.003,-LIMIT,LIMIT);drag.current=e.clientX}}}
-    onDoubleClick={()=>window.dispatchEvent(new Event('portrait-greet'))}>
-    <shaderMaterial transparent depthWrite={false} side={THREE.DoubleSide} uniforms={uniforms}
-      vertexShader={`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`}
-      fragmentShader={`uniform sampler2D art;uniform vec2 gaze;uniform float fade;varying vec2 vUv;
-      void main(){vec2 uv=vUv;
-      vec2 e1=(uv-vec2(.462,.691))/vec2(.027,.011);
-      vec2 e2=(uv-vec2(.589,.698))/vec2(.027,.011);
-      float mask=max(1.-smoothstep(.4,1.,length(e1)),1.-smoothstep(.4,1.,length(e2)));
-      // Move the image samples inside the eye openings; eyelid boundaries remain fixed.
-      uv-=gaze*mask;vec4 c=texture2D(art,uv);if(c.a<.02)discard;
-      gl_FragColor=vec4(c.rgb,c.a*fade*smoothstep(0.,.045,vUv.y));
-      #include <tonemapping_fragment>
-      #include <colorspace_fragment>
-      }`}/>
-  </mesh>
+ const textures=useTexture(names.map(n=>import.meta.env.BASE_URL+'personal/directions/'+n+'.webp'))
+ const mesh=useRef<THREE.Mesh>(null)
+ const {size,camera}=useThree()
+ const pointer=useRef({x:0,y:0,engaged:false}),override=useRef<number|null>(null)
+ const current=useRef(4),previous=useRef(4),transition=useRef(1),hello=useRef(0)
+ const projected=useMemo(()=>new THREE.Vector3(),[])
+ const uniforms=useMemo(()=>({before:{value:textures[4]},after:{value:textures[4]},blend:{value:1},fade:{value:1}}),[textures])
+ useEffect(()=>{
+  textures.forEach(t=>{t.colorSpace=THREE.SRGBColorSpace;t.needsUpdate=true})
+  const move=(e:PointerEvent)=>{pointer.current={x:e.clientX/window.innerWidth*2-1,y:1-e.clientY/window.innerHeight*2,engaged:true};override.current=null}
+  const turn=(e:Event)=>{override.current=(e as CustomEvent<number>).detail<0?3:5}
+  const reset=()=>{override.current=4;hello.current=0}
+  const greet=()=>{hello.current=performance.now()+1000}
+  const leave=()=>{pointer.current.engaged=false;override.current=4}
+  window.addEventListener('pointermove',move);window.addEventListener('avatar-turn',turn)
+  window.addEventListener('portrait-reset',reset);window.addEventListener('portrait-greet',greet)
+  document.documentElement.addEventListener('pointerleave',leave)
+  return()=>{window.removeEventListener('pointermove',move);window.removeEventListener('avatar-turn',turn);window.removeEventListener('portrait-reset',reset);window.removeEventListener('portrait-greet',greet);document.documentElement.removeEventListener('pointerleave',leave)}
+ },[textures])
+ useFrame((_,dt)=>{
+  if(!mesh.current)return
+  const active=useJourney.getState().active,mobile=size.width<641
+  const scale=mobile?.47:active===0?1:.88
+  mesh.current.position.x=THREE.MathUtils.damp(mesh.current.position.x,mobile?0:[2.35,2.8,2.7,3.1,3.1,2.8,2.7][active],3,dt)
+  mesh.current.position.y=THREE.MathUtils.damp(mesh.current.position.y,mobile?1.7:-.12,3,dt)
+  mesh.current.scale.setScalar(THREE.MathUtils.damp(mesh.current.scale.x,scale,4,dt))
+  projected.set(0,.85,0).applyMatrix4(mesh.current.matrixWorld).project(camera)
+  const dx=pointer.current.x-projected.x,dy=pointer.current.y-projected.y
+  const col=dx<-.20?0:dx>.20?2:1,row=dy>.22?0:dy<-.22?2:1
+  let next=override.current??(pointer.current.engaged?row*3+col:4)
+  if(reducedMotion)next=4
+  else if(performance.now()<hello.current)next=Math.floor((hello.current-performance.now())/250)%2?7:4
+  if(next!==current.current&&transition.current>=1){previous.current=current.current;current.current=next;transition.current=0}
+  transition.current=Math.min(1,transition.current+dt/.085)
+  uniforms.before.value=textures[previous.current];uniforms.after.value=textures[current.current]
+  uniforms.blend.value=transition.current
+  uniforms.fade.value=THREE.MathUtils.damp(uniforms.fade.value,mobile&&active>0?.12:1,4,dt)
+ })
+ return <mesh ref={mesh} position={[2.35,-.12,.3]} onDoubleClick={()=>window.dispatchEvent(new Event('portrait-greet'))}>
+  <planeGeometry args={[5.6,5.6]}/>
+  <shaderMaterial transparent depthWrite={false} uniforms={uniforms}
+   vertexShader={`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`}
+   fragmentShader={`uniform sampler2D before;uniform sampler2D after;uniform float blend;uniform float fade;varying vec2 vUv;
+   void main(){vec4 a=texture2D(before,vUv),b=texture2D(after,vUv);float alpha=mix(a.a,b.a,blend);vec3 rgb=mix(a.rgb*a.a,b.rgb*b.a,blend)/max(alpha,.0001);if(alpha<.01)discard;gl_FragColor=vec4(rgb,alpha*fade*smoothstep(0.,.025,vUv.y));
+   #include <tonemapping_fragment>
+   #include <colorspace_fragment>
+   }`}/>
+ </mesh>
 }
+
+

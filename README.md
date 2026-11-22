@@ -41,3 +41,21 @@ pnpm dev
 - `web/public/personal/jin-chin-portrait.png`: current generated artwork.
 
 GSAP React / ScrollTrigger manage section activation and restrained motion, with cleanup and reduced-motion support. Campus architecture is conceptual, not an accurate reconstruction. Print profile prints the website content rather than downloading an existing CV. LICENSE preserves upstream attribution; the original author's personal model, portfolio and imagery are excluded.
+
+## Directional portrait / midnight theme (v4)
+
+The current portrait uses nine AI-generated, photo-referenced transparent keyframes:
+front, left, right, up, down and four diagonals. A pointer selects a direction with an
+85 ms two-frame dissolve. This is a 2D directional sequence, not a rigged 3D model;
+there is no geometry skew or eye-UV deformation. Fast large movements can still
+show discrete pose changes. Reduced-motion mode keeps a front-facing portrait.
+
+Palette: midnight #0b1425, silver #f4f7fc, periwinkle #aab8ff. Existing education,
+experience, interests and contact sections are retained. Production portrait assets
+are WebP with alpha, approximately 0.95 MB total.
+
+Asset generation: built-in image generation. Shared prompt: preserve the supplied
+master identity, subtle cartoon render, facial proportions, hair, black crewneck,
+blue rim light, transparent square canvas, fixed torso/framing/scale; change only
+head and gaze to each direction. Horizontal target 15 degrees, vertical 7 degrees.
+The generated images are artistic approximations, not calibrated 3D projections.

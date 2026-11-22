@@ -25,10 +25,10 @@ function InterestScene(){
 }
 export default function PortraitStage({reducedMotion}:{reducedMotion:boolean}){
   const {camera}=useThree()
-  const bg=useMemo(()=>new THREE.Color('#f7f9fc'),[]),goal=useMemo(()=>new THREE.Color(),[])
+  const bg=useMemo(()=>new THREE.Color('#0b1425'),[]),goal=useMemo(()=>new THREE.Color(),[])
   useFrame((state,dt)=>{
     const active=useJourney.getState().active
-    goal.set(['#f7f9fc','#edf3f7','#eaf1f8','#edf2f8','#eef3f8','#eef3f9','#f7f9fc'][active])
+    goal.set(['#0b1425','#101c30','#101a30','#0b1b2b','#111b30','#0c1c2a','#0b1425'][active])
     bg.lerp(goal,1-Math.exp(-dt*2));state.scene.background=bg
     camera.lookAt(0,.2,0)
   })
@@ -36,9 +36,10 @@ export default function PortraitStage({reducedMotion}:{reducedMotion:boolean}){
     <ambientLight intensity={1.3}/><directionalLight position={[3,6,5]} intensity={1.5}/>
     <PortraitRelief reducedMotion={reducedMotion}/>
     <ChapterSet chapters={[1]}><Campus/></ChapterSet>
-    <ChapterSet chapters={[2]}><Cambridge/></ChapterSet>
+    <ChapterSet chapters={[0,2]}><Cambridge/></ChapterSet>
     <ChapterSet chapters={[3]}><Charts/></ChapterSet>
     <ChapterSet chapters={[4]}><Engineering paused={reducedMotion}/></ChapterSet>
     <ChapterSet chapters={[5]}><InterestScene/></ChapterSet>
   </>
 }
+

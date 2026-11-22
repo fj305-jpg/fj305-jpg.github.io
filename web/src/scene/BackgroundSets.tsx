@@ -10,7 +10,7 @@ import { Line } from '@react-three/drei'
 import * as THREE from 'three'
 import { useJourney } from '../journey'
 
-const BLUE='#82afd0', PALE='#c7dff0', INK='#567e9e'
+const BLUE='#32466e', PALE='#1c2c49', INK='#5e709b'
 export { Cambridge, Campus, Charts, Engineering, ChapterSet }
 
 function ChapterSet({chapters:ids,children,focus}:{chapters:number[];children:ReactNode;focus?:'quant'|'engineering'}){
@@ -27,7 +27,7 @@ function ChapterSet({chapters:ids,children,focus}:{chapters:number[];children:Re
     const target=ids.includes(state.active)&&(!focus||state.focus===focus)?1:0
     opacity.current=THREE.MathUtils.damp(opacity.current,target,3,dt)
     if(root.current){root.current.visible=opacity.current>.005;root.current.position.y=(1-opacity.current)*-.5}
-    materials.current.forEach(m=>{m.opacity=opacity.current*.65})
+    materials.current.forEach(m=>{m.opacity=opacity.current*.42})
   })
   return <group ref={root}>{children}</group>
 }
@@ -74,4 +74,5 @@ function Engineering({paused=false}:{paused?:boolean}){const ref=useRef<THREE.Gr
   <mesh rotation={[Math.PI/2,0,0]}><cylinderGeometry args={[.8,.8,2,20,4,true]}/><meshStandardMaterial color={INK} wireframe/></mesh>
   <Line points={Array.from({length:120},(_,i)=>{const x=i/15-4;return [x,Math.sin(x*4)*Math.exp(-Math.abs(x)*.4),.7]})} color="#4f8bb7" lineWidth={1.3}/>
 </group>}
+
 
