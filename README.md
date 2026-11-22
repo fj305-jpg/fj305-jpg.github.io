@@ -1,10 +1,27 @@
-# Jin Fengzhou — interactive resume, version 2
+# Jin Fengzhou — interactive personal résumé
 
-Built on the MIT-licensed Sen 3D resume framework. The personal content, background geometry, character and interface are replacements.
+Live website: https://fj305-jpg.github.io/
 
-## Local use
+Built on the MIT-licensed Sen résumé framework with original English content, scenes and personal artwork. Updates to `main` build and deploy automatically through GitHub Actions.
 
-Node.js 22+ and pnpm 11 are recommended.
+## Current character
+
+A photo-referenced, lightly illustrated chin-resting portrait is mapped onto an original shallow relief surface. It has independent iris motion, pointer-following gaze, a small greeting nod and a hard horizontal limit of 15 degrees in each direction (30 degrees total). It is a 2.5D illustration, not a full-turn scanned or rigged character. The earlier procedural GLB and its generator remain as archived source assets, but are not loaded or offered in the current interface.
+
+The artwork was generated using the built-in image-generation tool. Prompt brief: preserve the user's facial proportions, original eye shape, rounded jaw, black swept hair and black crewneck; lightly cartoonized editorial shading; relaxed hand-under-chin pose; both eyes visible; transparent background; no dog or props. No original photograph is shipped as the displayed character.
+
+## Content and readability
+
+- White / deep navy / restrained blue palette, opaque text, darker body copy and bordered control panels.
+- Education is ordered GHCIS high school, then University of Cambridge / Engineering.
+- Experiences are grouped into Quantitative and Engineering, including the user's Windshield Defrost Duct work.
+- Interests: Karting, Football and Guan Dan, with selectable decorative scenes. No achievements or playing level are claimed.
+- Email and phone are supplied by the owner and use mailto / tel links.
+- All visible copy is English. Source context and supplied CVs informed concise factual experience descriptions; degree end date is omitted because prior CV versions differ.
+
+## Development
+
+Node.js 22+ and pnpm 11 are recommended:
 
 ```
 cd web
@@ -12,32 +29,15 @@ pnpm install --frozen-lockfile --ignore-scripts
 pnpm dev
 ```
 
-Open the printed local URL. `pnpm build` creates `web/dist`; `pnpm preview` serves that production build. The site needs an HTTP server; double-clicking its HTML file is not sufficient.
+`pnpm build` produces `web/dist`; `pnpm preview` serves that production build. Use an HTTP server rather than opening the source HTML directly.
 
-## What changed
+## Main files
 
-- Original texture-free three-dimensional character, built from geometry and standard materials; no portrait image, image plane or dog is loaded.
-- Drag rotation, head / eye tracking, a waving arm, keyboard-accessible rotation and greeting controls.
-- Downloadable GLB model in `web/public/personal/jin-fengzhou.glb`. This is a stylized approximation, not a precise scan. Its named part groups can be animated; it is not a production skeletal rig.
-- Pale blue / slate visual palette, clear education and experience headings.
-- Education is ordered high school, then university.
-- Experiences are grouped into Quantitative and Engineering. Descriptions are concise summaries of the user's supplied information and existing CVs. Degree end date was omitted because existing CV versions disagree.
-- Email and phone are real clickable mailto / tel links supplied by the user.
-- GSAP React + ScrollTrigger handle chapter activation, content reveals and reading progress with cleanup and reduced-motion support.
-- The architectural backgrounds are conceptual geometry, not reconstructions of actual campuses.
+- `web/src/ResumeApp.tsx`: English content, education, experiences, interests and contact links.
+- `web/src/theme-v3.css`: current colours and contrast rules, layered over `resume.css`.
+- `web/src/scene/PortraitRelief.tsx`: shallow relief, gaze shader and bounded motion.
+- `web/src/scene/PortraitStage.tsx`: background scenes and hobby illustrations.
+- `web/src/journey.ts`: section and interest state.
+- `web/public/personal/jin-chin-portrait.png`: current generated artwork.
 
-## Source
-
-`web/src/ResumeApp.tsx` contains the English copy and experience lists.
-`web/src/resume.css` contains colours and responsive layout.
-`web/src/scene/ResumeScene.tsx` contains runtime interaction.
-`web/src/scene/avatarModel.ts` creates the character.
-`web/src/scene/BackgroundSets.tsx` contains background sets.
-
-To regenerate the GLB after model edits, run `node --experimental-strip-types export-avatar.mjs` with Node.js 22+.
-
-## Deployment
-
-The supplied static ZIP contains the built website with `index.html` at root. The source ZIP contains an Actions workflow for GitHub Pages. Push to your own repository and choose GitHub Actions in the Pages settings. No paid domain is required. The repository workflow is prepared but has not yet been run on GitHub.
-
-The preview is local, not publicly deployed. Print profile prints this website's content rather than downloading an existing CV. Source attribution is preserved in LICENSE and the site footer. Original Sen personal assets are excluded from the release.
+GSAP React / ScrollTrigger manage section activation and restrained motion, with cleanup and reduced-motion support. Campus architecture is conceptual, not an accurate reconstruction. Print profile prints the website content rather than downloading an existing CV. LICENSE preserves upstream attribution; the original author's personal model, portfolio and imagery are excluded.

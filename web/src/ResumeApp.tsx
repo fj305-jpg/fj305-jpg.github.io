@@ -4,7 +4,7 @@ import { useReducedMotion } from 'framer-motion'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useGSAP } from '@gsap/react'
-import Scene from './scene/ResumeScene'
+import Scene from './scene/PortraitStage'
 import { chapters, useJourney } from './journey'
 gsap.registerPlugin(ScrollTrigger,useGSAP)
 
@@ -34,16 +34,17 @@ export default function ResumeApp(){
   const [menu,setMenu]=useState(false)
   const reduced=useReducedMotion()
   const active=useJourney(s=>s.active),setActive=useJourney(s=>s.setActive)
+  const interest=useJourney(s=>s.interest),setInterest=useJourney(s=>s.setInterest)
   useGSAP(()=>{
     const sections=gsap.utils.toArray<HTMLElement>('.chapter')
     sections.forEach((section,i)=>{
       ScrollTrigger.create({trigger:section,start:'top 45%',end:'bottom 45%',onEnter:()=>setActive(i),onEnterBack:()=>setActive(i)})
-      if(!reduced)gsap.from(section.querySelector('.chapter-copy'),{y:26,opacity:.55,ease:'none',scrollTrigger:{trigger:section,start:'top 85%',end:'top 30%',scrub:.6}})
+      if(!reduced)gsap.from(section.querySelector('.chapter-copy'),{y:20,ease:'none',scrollTrigger:{trigger:section,start:'top 85%',end:'top 30%',scrub:.6}})
     })
     gsap.to('.reading-progress',{scaleX:1,ease:'none',scrollTrigger:{trigger:root.current,start:'top top',end:'bottom bottom',scrub:true}})
   },{scope:root,dependencies:[reduced],revertOnUpdate:true})
   function go(i:number){document.getElementById(chapters[i].id)?.scrollIntoView({behavior:reduced?'instant':'smooth'});setMenu(false)}
-  const nav=[{label:'About',i:0},{label:'Education',i:1},{label:'Experiences',i:3},{label:'Contact',i:5}]
+  const nav=[{label:'About',i:0},{label:'Education',i:1},{label:'Experiences',i:3},{label:'Interests',i:5},{label:'Contact',i:6}]
   const current=active===2?1:active===4?3:active
   return <div ref={root} className={`resume-site chapter-${active}`}>
     <div className="scene-bg" aria-hidden="true"><SceneBoundary><Canvas shadows dpr={[1,1.5]} camera={{position:[0,.35,11],fov:35}} gl={{antialias:true,alpha:true}}><Suspense fallback={null}><Scene reducedMotion={!!reduced}/></Suspense></Canvas></SceneBoundary></div>
@@ -59,15 +60,16 @@ export default function ResumeApp(){
           <p className="intro-detail">Engineering, quantitative research<br/>and learning through building.</p>
           <div className="actions"><button className="primary" onClick={()=>go(3)}>Explore my experiences</button><button className="text-button" onClick={()=>go(1)}>My education</button></div>
         </div>
-        <div className="character-controls"><span>Drag to rotate · Double-click to wave</span><div><button onClick={()=>window.dispatchEvent(new CustomEvent('avatar-turn',{detail:-.5}))} aria-label="Rotate character left">Rotate left</button><button onClick={()=>window.dispatchEvent(new Event('portrait-greet'))}>Say hello</button><button onClick={()=>window.dispatchEvent(new CustomEvent('avatar-turn',{detail:.5}))} aria-label="Rotate character right">Rotate right</button></div><a href={`${import.meta.env.BASE_URL}personal/jin-fengzhou.glb`} download>Download 3D character</a></div>
+        <div className="character-controls"><span>Eyes follow your cursor · A gentle turn</span><div><button onClick={()=>window.dispatchEvent(new CustomEvent('avatar-turn',{detail:-.12}))} aria-label="Turn portrait left">Look left</button><button onClick={()=>window.dispatchEvent(new Event('portrait-greet'))}>Say hello</button><button onClick={()=>window.dispatchEvent(new CustomEvent('avatar-turn',{detail:.12}))} aria-label="Turn portrait right">Look right</button><button onClick={()=>window.dispatchEvent(new Event('portrait-reset'))}>Reset</button></div></div>
       </section>
       <section className="chapter education" id="education"><div className="chapter-copy"><p className="eyebrow">Education / High school</p><h2>Shanghai Guanghua<br/>Cambridge<br/><em>International School.</em></h2><p className="school-short">GHCIS</p><p className="location">Shanghai, China</p><div className="education-tabs"><button className="selected" onClick={()=>go(1)}>High school</button><button onClick={()=>go(2)}>University</button></div></div></section>
       <section className="chapter education university" id="cambridge"><div className="chapter-copy"><p className="eyebrow">Education / University</p><h2>University<br/>of <em>Cambridge.</em></h2><p className="subject">Engineering</p><p className="location">Cambridge, United Kingdom</p><p className="education-note">Mathematical methods · Mechanics & vibrations<br/>Digital circuits & information processing</p><div className="education-tabs"><button onClick={()=>go(1)}>High school</button><button className="selected" onClick={()=>go(2)}>University</button></div></div></section>
       <section className="chapter experiences" id="quantitative"><div className="chapter-copy"><p className="eyebrow">Experiences</p><h2><em>Quantitative.</em></h2><div className="category-tabs"><button className="selected" onClick={()=>go(3)}>Quantitative</button><button onClick={()=>go(4)}>Engineering</button></div><ExperienceList items={quantitative}/></div></section>
       <section className="chapter experiences engineering" id="engineering"><div className="chapter-copy"><p className="eyebrow">Experiences</p><h2><em>Engineering.</em></h2><div className="category-tabs"><button onClick={()=>go(3)}>Quantitative</button><button className="selected" onClick={()=>go(4)}>Engineering</button></div><ExperienceList items={engineering}/></div></section>
+      <section className="chapter interests" id="interests"><div className="chapter-copy"><p className="eyebrow">Interests</p><h2>Outside<br/><em>engineering.</em></h2><p className="interest-intro">A few things I enjoy away from my studies.</p><div className="interest-options" aria-label="Personal interests">{[{id:'karting' as const,name:'Karting',sub:'On the track'},{id:'football' as const,name:'Football',sub:'On the pitch'},{id:'guandan' as const,name:'Guan Dan',sub:'Around the table'}].map(item=><button key={item.id} className={interest===item.id?'selected':''} aria-pressed={interest===item.id} onClick={()=>setInterest(item.id)}><span>{item.name}</span><small>{item.sub}</small></button>)}</div></div></section>
       <section className="chapter contact" id="contact"><div className="chapter-copy"><p className="eyebrow">Contact</p><h2>Get in <em>touch.</em></h2><p className="contact-intro">For opportunities, ideas<br/>and interesting conversations.</p><div className="contact-details"><a href="mailto:kevinjfz@outlook.com"><span>Email</span>kevinjfz@outlook.com</a><a href="tel:+447962972630"><span>Phone</span>+44 7962 972630</a></div><button className="text-button" onClick={()=>window.print()}>Print profile</button><a className="source-credit" href="https://github.com/dayinji/sen-3d-resume" target="_blank" rel="noreferrer">Built on Sen's open-source résumé framework</a></div></section>
     </main>
     <aside className="chapter-rail" aria-label="Chapter navigation">{chapters.map((c,i)=><button key={c.id} className={active===i?'active':''} aria-label={`Go to ${c.label}`} aria-current={active===i?'step':undefined} onClick={()=>go(i)}><span/>{c.label}</button>)}</aside>
-    <footer className="bottom-bar"><span>Jin Fengzhou · Engineering</span><span>{chapters[active].scene}</span><span>{String(active+1).padStart(2,'0')} / 06</span></footer><div className="reading-progress"/>
+    <footer className="bottom-bar"><span>Jin Fengzhou · Engineering</span><span>{chapters[active].scene}</span><span>{String(active+1).padStart(2,'0')} / {String(chapters.length).padStart(2,'0')}</span></footer><div className="reading-progress"/>
   </div>
 }
