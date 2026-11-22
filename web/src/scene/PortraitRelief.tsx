@@ -8,16 +8,17 @@ const headFragment=`
 uniform sampler2D art;uniform vec2 offset;uniform vec2 span;uniform float fade;varying vec2 vUv;
 void main(){
  // Exactly one baked frame per sample. No crossfade, optical-flow shader or UV warp.
- if(vUv.y<.0147)discard;
+ if(vUv.y<.016055)discard;
  vec4 c=texture2D(art,offset+vUv*span);if(c.a<.02)discard;
  gl_FragColor=vec4(c.rgb,c.a*fade);
  #include <colorspace_fragment>
 }`
 const bodyFragment=`
-uniform sampler2D art;uniform float fade;varying vec2 vUv;
+uniform sampler2D art;uniform vec2 offset;uniform vec2 span;uniform float fade;varying vec2 vUv;
 void main(){
- if(vUv.y>.30)discard;
- vec4 c=texture2D(art,vUv);gl_FragColor=vec4(c.rgb,c.a*fade);
+ if(vUv.y>.30&&vUv.x>.1796875&&vUv.x<.8203125)discard;
+ vec4 c=texture2D(art,offset+vUv*span);
+ gl_FragColor=vec4(c.rgb,c.a*fade*smoothstep(0.,.035,vUv.y));
  #include <colorspace_fragment>
 }`
 export default function PortraitRelief({reducedMotion}:{reducedMotion:boolean}){
@@ -25,10 +26,20 @@ export default function PortraitRelief({reducedMotion}:{reducedMotion:boolean}){
  const root=useRef<THREE.Group>(null)
  const {size,camera,gl}=useThree(),mobile=size.width<641
  const [atlas,setAtlas]=useState<THREE.Texture|null>(null)
+ const [bodyAtlas,setBodyAtlas]=useState<THREE.Texture|null>(null)
  const initialMobile=useRef(mobile)
  const pose=useRef({x:0,y:0}),pointer=useRef({x:0,y:0,engaged:false}),hello=useRef(0),demo=useRef(0)
  const projected=useMemo(()=>new THREE.Vector3(),[])
  const uniforms=useMemo(()=>({art:{value:front},offset:{value:new THREE.Vector2()},span:{value:new THREE.Vector2(1,1)},fade:{value:1}}),[front])
+ const bodyUniforms=useMemo(()=>({art:{value:front},offset:{value:new THREE.Vector2()},span:{value:new THREE.Vector2(1,1)},fade:uniforms.fade}),[front,uniforms])
+ useEffect(()=>{
+  let cancelled=false
+  const t=new THREE.TextureLoader().load(import.meta.env.BASE_URL+'personal/sequence-v7/body.webp',texture=>{
+   if(cancelled){texture.dispose();return}
+   texture.colorSpace=THREE.SRGBColorSpace;texture.generateMipmaps=false;texture.minFilter=THREE.LinearFilter;texture.magFilter=THREE.LinearFilter;texture.needsUpdate=true;setBodyAtlas(texture)
+  })
+  return()=>{cancelled=true;t.dispose()}
+ },[])
  useEffect(()=>{
   let cancelled=false
   const url=import.meta.env.BASE_URL+'personal/sequence-v7/'+((initialMobile.current||gl.capabilities.maxTextureSize<8192)?'mobile':'desktop')+'.webp'
@@ -63,12 +74,12 @@ export default function PortraitRelief({reducedMotion}:{reducedMotion:boolean}){
   let ty=pointer.current.engaged?THREE.MathUtils.clamp((projected.y-pointer.current.y)/.8,-1,1):0
   if(performance.now()<hello.current)ty+=Math.sin((hello.current-performance.now())/1400*Math.PI*2)*.4
   if(performance.now()<demo.current){const p=1-(demo.current-performance.now())/3600;tx=-Math.sin(p*Math.PI*2);ty=0}
-  if(reducedMotion||!atlas){tx=0;ty=0}
+  if(reducedMotion||!atlas||!bodyAtlas){tx=0;ty=0}
   const step=(a:number,b:number)=>a+THREE.MathUtils.clamp(damp(a,b,9)-a,-dt*3.8,dt*3.8)
   pose.current.x=reducedMotion?0:step(pose.current.x,tx);pose.current.y=reducedMotion?0:step(pose.current.y,THREE.MathUtils.clamp(ty,-1,1))
   const yaw=Math.round((pose.current.x+1)*16),pitch=Math.round((pose.current.y+1)*4),frame=pitch*33+yaw
   gl.domElement.dataset.portraitFrame=String(frame)
-  gl.domElement.dataset.portraitReady=String(!!atlas)
+  gl.domElement.dataset.portraitReady=String(!!atlas&&!!bodyAtlas)
   if(atlas){
    const width=atlas.image.width as number,height=atlas.image.height as number,w=width/15,h=height/20
    // Half-texel insets keep bilinear filtering inside this frame's two-pixel gutter.
@@ -76,15 +87,22 @@ export default function PortraitRelief({reducedMotion}:{reducedMotion:boolean}){
    uniforms.offset.value.set(((frame%15)*w+2.5)/width,(height-(Math.floor(frame/15)+1)*h+2.5)/height)
    uniforms.span.value.set((w-5)/width,(h-5)/height)
   }
+  if(bodyAtlas){
+   const w=bodyAtlas.image.width as number,h=bodyAtlas.image.height as number
+   bodyUniforms.art.value=bodyAtlas
+   bodyUniforms.offset.value.set(((frame%15)*128+2.5)/w,(h-(Math.floor(frame/15)+1)*128+2.5)/h)
+   bodyUniforms.span.value.set(123/w,123/h)
+  }
   uniforms.fade.value=damp(uniforms.fade.value,mobile&&active>0?.12:1)
   root.current.traverse(o=>{if(o instanceof THREE.Mesh&&o.material instanceof THREE.MeshBasicMaterial)o.material.opacity=uniforms.fade.value})
  })
  return <group ref={root} position={[2.35,-.12,.3]} onDoubleClick={()=>window.dispatchEvent(new Event('portrait-greet'))}>
-  {!atlas?<mesh><planeGeometry args={[5.6,5.6]}/><meshBasicMaterial map={front} transparent depthWrite={false} toneMapped={false}/></mesh>:<>
-   <mesh><planeGeometry args={[5.6,5.6]}/><shaderMaterial transparent depthWrite={false} toneMapped={false} uniforms={{art:{value:front},fade:uniforms.fade}} vertexShader={vertex} fragmentShader={bodyFragment}/></mesh>
-   <mesh position={[0,.728,.002]}><planeGeometry args={[3.584,3.808]}/><shaderMaterial transparent depthWrite={false} toneMapped={false} uniforms={uniforms} vertexShader={vertex} fragmentShader={headFragment}/></mesh>
+  {(!atlas||!bodyAtlas)?<mesh><planeGeometry args={[5.6,5.6]}/><meshBasicMaterial map={front} transparent depthWrite={false} toneMapped={false}/></mesh>:<>
+   <mesh><planeGeometry args={[5.6,5.6]}/><shaderMaterial transparent depthWrite={false} toneMapped={false} uniforms={bodyUniforms} vertexShader={vertex} fragmentShader={bodyFragment}/></mesh>
+   <mesh position={[0,.72625,.002]}><planeGeometry args={[3.5875,3.815]}/><shaderMaterial transparent depthWrite={false} toneMapped={false} uniforms={uniforms} vertexShader={vertex} fragmentShader={headFragment}/></mesh>
   </>}
  </group>
 }
+
 
 

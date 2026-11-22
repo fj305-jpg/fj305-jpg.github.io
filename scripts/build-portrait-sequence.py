@@ -106,3 +106,22 @@ contact.save(workspace/'contact-sheet.jpg')
 preview=workspace/'preview';preview.mkdir(exist_ok=True)
 for i,col in enumerate(list(range(33))+list(range(31,0,-1))):
  im=frames[132+col];bg=Image.new('RGB',im.size,'#0b1425');bg.paste(im,mask=im.getchannel('A'));bg.save(preview/f'{i:03}.png')
+
+
+# Matching low-resolution torso atlas prevents crop-boundary gaps.
+from pathlib import Path
+from PIL import Image
+import numpy as np
+base=workspace;out=root/'web/public/personal/sequence-v7/body.webp'
+atlas=Image.new('RGBA',(15*128,20*128))
+for row in range(9):
+ for col in range(33):
+  if row%4==0:source=[base/f'output-{row//4}-{k}/{col+1:08}.png' for k in ['rgb','alpha']]
+  elif row%2==0:source=[base/f'vertical-output-{k}/{((row//4)*33+col)*4+2:08}.png' for k in ['rgb','alpha']]
+  else:source=[base/f'quarter-output-{k}/{((row//2)*33+col)*4+2:08}.png' for k in ['rgb','alpha']]
+  rgb=np.asarray(Image.open(source[0]).convert('RGB'),np.float32);a=np.asarray(Image.open(source[1]).convert('L'),np.float32)/255
+  rgba=np.dstack([np.clip(rgb/np.maximum(a[:,:,None],.02),0,255).astype(np.uint8),(a*255).astype(np.uint8)])
+  im=Image.fromarray(rgba).resize((124,124),Image.Resampling.LANCZOS);i=row*33+col
+  atlas.paste(im,((i%15)*128+2,(i//15)*128+2))
+atlas.save(out,'WEBP',quality=90,method=4)
+print(out.stat().st_size)

@@ -130,3 +130,8 @@ Validation: TypeScript, targeted ESLint, production build, intermediate-frame
 contact-sheet inspection, browser console checks. A 120-frame browser recording
 covered the complete yaw range, including all 33 positions. These checks do not
 establish universal smoothness across browsers/devices.
+
+The torso now samples a matching low-resolution baked frame as well (~1.1 MB
+encoded / ~20 MB GPU). Head and body frames share the same pose index and crop
+coordinates; the body shader excludes the face area. This removes shoulder gaps
+without blending multiple faces. Lower torso edges fade into the page background.
