@@ -83,3 +83,13 @@ Algorithm reference: https://docs.opencv.org/5.0/main_modules/classcv_1_1DISOpti
 Validation: TypeScript, targeted ESLint, production build; browser checked with
 no console errors. A 45-frame screen recording of the nod interaction showed 45
 unique face frames. This is a continuity check, not a guaranteed device FPS benchmark.
+
+## Portrait artifact fix (current)
+
+User testing exposed obvious double eyes, noses and facial outlines in the v5
+multi-view optical-flow interpolation. That approach is retired from production.
+The site now renders one unwarped frontal portrait. Direction controls and the
+cursor-tracking claim are removed. Chapter navigation/backgrounds remain interactive.
+Natural continuous head/eye tracking is not delivered by this fallback; it needs a
+consistent rigged character or a consistent rendered sequence, rather than independently
+generated view images. Old direction/flow assets are retained only as archived inputs.
