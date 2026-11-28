@@ -94,7 +94,7 @@ Natural continuous head/eye tracking is not delivered by this fallback; it needs
 consistent rigged character or a consistent rendered sequence, rather than independently
 generated view images. Old direction/flow assets are retained only as archived inputs.
 
-## Offline photo sequence + minimalist Cambridge (v7 — current)
+## Offline photo sequence + minimalist Cambridge (v7 — archived)
 
 The user selected a photo/video sequence instead of a rigged 3D character. The
 nine reference views are now interpolated offline with RIFE-ncnn-vulkan v4.6:
@@ -135,3 +135,33 @@ The torso now samples a matching low-resolution baked frame as well (~1.1 MB
 encoded / ~20 MB GPU). Head and body frames share the same pose index and crop
 coordinates; the body shader excludes the face area. This removes shoulder gaps
 without blending multiple faces. Lower torso edges fade into the page background.
+
+## Full-portrait video sequence (v8 — current)
+
+The current renderer replaces both atlases with a packed-alpha H.264 video.
+The complete portrait is 960 x 960 on desktop and 640 x 640 on mobile; the torso
+no longer enlarges a 124-pixel tile. Offline RIFE interpolation supplies 65 yaw
+positions across 9 pitch rows (585 poses). Each encoded frame places
+premultiplied RGB on the left and grayscale alpha on the right. Only one decoded
+pose is displayed; multiple faces are never crossfaded.
+
+The file downloads once to a Blob before interaction. A paused native video
+seeks to the latest cursor target, with only one seek pending at a time.
+The frontal poster remains visible during loading or failure. Reduced-motion
+preferences keep the poster and skip video loading. Mobile uses a smaller file.
+Preview turn, existing layout/content and minimalist Cambridge linework remain.
+
+Desktop: 10,266,870 bytes, 1920 x 960 packed pixels. Mobile: 4,007,851 bytes,
+1280 x 640 packed pixels. The desktop RGBA texture occupies approximately 7.4 MB
+instead of approximately 208 MB for the old combined atlases. Poster storage and
+decoder caches are additional; these are size estimates, not GPU measurements.
+
+Validation: TypeScript, targeted ESLint, production build and local Edge visual
+checks. Local observations included 3–8 ms seek latency and up to 120 render FPS
+in the tested window. Render FPS is not pose-update FPS or a device guarantee.
+Finite pose sampling and interpolated imagery remain limitations.
+
+Prepared with official RIFE-ncnn-vulkan v4.6 and FFmpeg. Encoding: libx264,
+CRF 15 desktop / 17 mobile, GOP 4, no B frames, yuv420p, faststart, 60 fps.
+This stream is a seekable pose grid, not an autoplay movie. Executables, model
+weights and temporary interpolation frames are not shipped with the website.

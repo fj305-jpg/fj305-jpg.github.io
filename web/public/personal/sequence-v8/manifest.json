@@ -1,0 +1,25 @@
+{
+  "yawFrames": 65,
+  "pitchFrames": 9,
+  "frames": 585,
+  "fps": 60,
+  "portraitPixels": [
+    960,
+    960
+  ],
+  "encodedPixels": [
+    1920,
+    960
+  ],
+  "layout": "premultiplied RGB on left, alpha on right",
+  "bytes": 10266870,
+  "mobilePortraitPixels": [
+    640,
+    640
+  ],
+  "mobileEncodedPixels": [
+    1280,
+    640
+  ],
+  "mobileBytes": 4007851
+}

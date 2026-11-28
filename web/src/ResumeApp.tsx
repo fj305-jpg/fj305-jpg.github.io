@@ -1,4 +1,4 @@
-import { Component, Suspense, useRef, useState, type ReactNode } from 'react'
+import { Component, Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { useReducedMotion } from 'framer-motion'
 import gsap from 'gsap'
@@ -33,6 +33,12 @@ export default function ResumeApp(){
   const root=useRef<HTMLDivElement>(null)
   const [menu,setMenu]=useState(false)
   const reduced=useReducedMotion()
+  const [portraitStatus,setPortraitStatus]=useState<'loading'|'ready'|'static'>('loading')
+  useEffect(()=>{
+    const ready=()=>setPortraitStatus('ready'),failed=()=>setPortraitStatus('static'),loading=()=>setPortraitStatus('loading')
+    window.addEventListener('portrait-loading',loading);window.addEventListener('portrait-ready',ready);window.addEventListener('portrait-error',failed)
+    return()=>{window.removeEventListener('portrait-loading',loading);window.removeEventListener('portrait-ready',ready);window.removeEventListener('portrait-error',failed)}
+  },[])
   const active=useJourney(s=>s.active),setActive=useJourney(s=>s.setActive)
   const interest=useJourney(s=>s.interest),setInterest=useJourney(s=>s.setInterest)
   useGSAP(()=>{
@@ -60,7 +66,7 @@ export default function ResumeApp(){
           <p className="intro-detail">Engineering, quantitative research<br/>and learning through building.</p>
           <div className="actions"><button className="primary" onClick={()=>go(3)}>Explore my experiences</button><button className="text-button" onClick={()=>go(1)}>My education</button></div>
         </div>
-        <div className="character-controls"><span>Move your cursor</span><div><button onClick={()=>window.dispatchEvent(new Event('portrait-demo'))}>Preview turn</button></div></div>
+        {!reduced&&<div className="character-controls"><span>{portraitStatus==='ready'?'Move your cursor':'Jin Fengzhou'}</span><div><button disabled={portraitStatus!=='ready'} onClick={()=>window.dispatchEvent(new Event('portrait-demo'))}>{portraitStatus==='loading'?'Loading portrait…':portraitStatus==='static'?'Portrait':'Preview turn'}</button></div></div>}
       </section>
       <section className="chapter education" id="education"><div className="chapter-copy"><p className="eyebrow">Education / High school</p><h2>Shanghai Guanghua<br/>Cambridge<br/><em>International School.</em></h2><p className="school-short">GHCIS</p><p className="location">Shanghai, China</p><div className="education-tabs"><button className="selected" onClick={()=>go(1)}>High school</button><button onClick={()=>go(2)}>University</button></div></div></section>
       <section className="chapter education university" id="cambridge"><div className="chapter-copy"><p className="eyebrow">Education / University</p><h2>University<br/>of <em>Cambridge.</em></h2><p className="subject">Engineering</p><p className="location">Cambridge, United Kingdom</p><p className="education-note">Mathematical methods · Mechanics & vibrations<br/>Digital circuits & information processing</p><div className="education-tabs"><button onClick={()=>go(1)}>High school</button><button className="selected" onClick={()=>go(2)}>University</button></div></div></section>
